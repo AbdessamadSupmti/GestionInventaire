@@ -11,8 +11,41 @@ public class ProduitDAO {
         connection = JDBCUtil.getConnection();
     }
 
+    public void enregistrerLog(String operation, String details, String user) {
+        try {
+            String query = "INSERT INTO logs (operation, details, user) VALUES (?, ?, ?)";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, operation);
+            stmt.setString(2, details);
+            stmt.setString(3, user);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public List<String> afficherLogs() {
+        List<String> logs = new ArrayList<>();
+        try {
+            System.err.println("TEST  : ");
 
-    public void ajouterProduit(String nom, String categorie, int quantite, double prix, String marque, String description, String reference) {
+            String query = "SELECT * FROM logs ORDER BY timestamp DESC";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String logEntry = "Operation: " + rs.getString("operation") +
+                        ", User: " + rs.getString("user") +
+                        ", Details: " + rs.getString("details") +
+                        ", Timestamp: " + rs.getTimestamp("timestamp");
+                logs.add(logEntry);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return logs;
+    }
+
+    public void ajouterProduit(String nom, String categorie, int quantite, double prix, String marque, String description, String reference, String user) {
         try {
             String query = "INSERT INTO produits (nom, categorie, quantite, prix, marque, description, reference) VALUES (?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement stmt = connection.prepareStatement(query);
@@ -24,18 +57,23 @@ public class ProduitDAO {
             stmt.setString(6, description);
             stmt.setString(7, reference);
             stmt.executeUpdate();
+
+            enregistrerLog("AJOUT_PRODUIT", "Produit ajouté : " + nom + " (Référence : " + reference + ")", user);
         } catch (SQLException e) {
+            System.err.println("Erreur lors de l'ajout du produit : " + e.getMessage());
             e.printStackTrace();
         }
     }
 
 
-    public void supprimerProduit(int id) {
+    public void supprimerProduit(int id, String user) {
         try {
             String query = "DELETE FROM produits WHERE id = ?";
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setInt(1, id);
             stmt.executeUpdate();
+            enregistrerLog("SUPPRESSION_PRODUIT", "Produit supprimé avec ID : " + id, user);
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -122,7 +160,7 @@ public class ProduitDAO {
     }
 
 
-    public void modifierProduit(int id, String nom, String categorie, int quantite, double prix, String marque, String description, String reference) {
+    public void modifierProduit(int id, String nom, String categorie, int quantite, double prix, String marque, String description, String reference, String username) {
         String sql = "UPDATE produits SET nom = ?, categorie = ?, quantite = ?, prix = ?, marque = ?, description = ?, reference = ? WHERE id = ?";
 
         try (Connection conn = JDBCUtil.getConnection();
@@ -136,7 +174,7 @@ public class ProduitDAO {
             stmt.setString(6, description);
             stmt.setString(7, reference);
             stmt.setInt(8, id);
-
+            enregistrerLog("MODIFICATION_PRODUIT", "Produit modifié : " + nom + " (Référence : " + reference + ")", username);
             stmt.executeUpdate();
             System.out.println("Produit mis à jour avec succès !");
         } catch (Exception e) {

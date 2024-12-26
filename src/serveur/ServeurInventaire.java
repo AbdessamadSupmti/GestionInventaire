@@ -15,19 +15,22 @@ public class ServeurInventaire extends UnicastRemoteObject implements InterfaceI
         produitDAO = new ProduitDAO();
     }
 
+    @Override
+    public List<String> afficherLogs() throws RemoteException {
+        return produitDAO.afficherLogs();
+    }
 
     @Override
     public String authenticateUser(String username, String password) throws RemoteException {
         return produitDAO.authenticateUser(username, password);
     }
-    public void ajouterProduit(String nom, String categorie, int quantite, double prix, String marque, String description, String reference) throws RemoteException {
-        produitDAO.ajouterProduit(nom, categorie, quantite, prix, marque, description, reference);
-    }
 
-    public void supprimerProduit(int id) throws RemoteException {
-        produitDAO.supprimerProduit(id);
+    public void ajouterProduit(String nom, String categorie, int quantite, double prix, String marque, String description, String reference, String username) throws RemoteException {
+        produitDAO.ajouterProduit(nom, categorie, quantite, prix, marque, description, reference, username);
     }
-
+    public void supprimerProduit(int id, String username) throws RemoteException {
+        produitDAO.supprimerProduit(id, username);
+    }
     public List<String> rechercherProduits(String nom) throws RemoteException {
         return produitDAO.rechercherProduits(nom);
     }
@@ -38,8 +41,8 @@ public class ServeurInventaire extends UnicastRemoteObject implements InterfaceI
     }
 
     @Override
-    public void modifierProduit(int id, String nom, String categorie, int quantite, double prix, String marque, String description, String reference) throws RemoteException {
-        produitDAO.modifierProduit(id, nom, categorie, quantite, prix, marque, description, reference);
+    public void modifierProduit(int id, String nom, String categorie, int quantite, double prix, String marque, String description, String reference, String username) throws RemoteException {
+        produitDAO.modifierProduit(id, nom, categorie, quantite, prix, marque, description, reference,  username);
     }
 
     public static void main(String[] args) {

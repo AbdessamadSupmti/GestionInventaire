@@ -1,5 +1,6 @@
 package client;
 
+import javafx.geometry.Insets;
 import serveur.InterfaceInventaire;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
@@ -20,6 +21,7 @@ public class ClientInventaire extends Application {
 
     private InterfaceInventaire inventaire;
     private User loggedInUser;
+    private TableView<Log> logsTable;
 
     private TableView<Product> table;
     private TextField tfNom, tfCategorie, tfQuantite, tfPrix, tfRecherche, tfMarque, tfDescription, tfReference;
@@ -28,17 +30,23 @@ public class ClientInventaire extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-    @Override
     public void start(Stage primaryStage) {
         try {
             VBox loginLayout = new VBox(10);
+            loginLayout.setAlignment(Pos.CENTER);
+
+            Label welcomeLabel = new Label("Bienvenue dans le Gestionnaire d'Inventaire");
+            welcomeLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
             TextField tfUsername = new TextField();
             tfUsername.setPromptText("Nom d'utilisateur");
             PasswordField tfPassword = new PasswordField();
             tfPassword.setPromptText("Mot de passe");
             Button btnLogin = new Button("Se connecter");
 
-            loginLayout.getChildren().addAll(tfUsername, tfPassword, btnLogin);
+
+            loginLayout.getChildren().addAll(welcomeLabel, tfUsername, tfPassword, btnLogin);
+
 
             btnLogin.setOnAction(e -> {
                 try {
@@ -60,6 +68,7 @@ public class ClientInventaire extends Application {
                 }
             });
 
+
             Scene loginScene = new Scene(loginLayout, 300, 200);
             loginScene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
             primaryStage.setScene(loginScene);
@@ -71,12 +80,29 @@ public class ClientInventaire extends Application {
         }
     }
 
+
     private void showMainApp (Stage primaryStage, String role) {
         try {
             inventaire = (InterfaceInventaire) Naming.lookup("rmi://localhost:2299/gestionnaire");
 
             primaryStage.setTitle("Gestion d'Inventaire");
+            // Create a VBox layout
+            VBox vbox = new VBox(10);
+            vbox.setPadding(new Insets(10));
+            vbox.setAlignment(Pos.TOP_RIGHT);
 
+            // Add a welcome message
+            Label welcomeLabel = new Label("Bienvenue, " + loggedInUser.getUsername() + " !");
+            welcomeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #333;");
+
+
+
+            // Add a description based on role
+            Label roleLabel = new Label("Vous êtes connecté en tant que : " + role);
+            roleLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #666;");
+
+
+            vbox.getChildren().addAll(welcomeLabel, roleLabel);
             table = new TableView<>();
             TableColumn<Product, Integer> colId = new TableColumn<>("ID");
             TableColumn<Product, String> colNom = new TableColumn<>("Nom");
@@ -90,6 +116,15 @@ public class ClientInventaire extends Application {
             TableColumn<Product, String> colDateCreation = new TableColumn<>("Date Création");
             TableColumn<Product, String> colDateModification = new TableColumn<>("Date Modification");
 
+
+            // Initialize the logs table
+            logsTable = new TableView<>();
+            TableColumn<Log, String> colOperation = new TableColumn<>("Opération");
+            TableColumn<Log, String> colUser = new TableColumn<>("Utilisateur");
+            TableColumn<Log, String> colDetails = new TableColumn<>("Détails");
+            TableColumn<Log, String> colTimestamp = new TableColumn<>("Horodatage");
+
+
             colId.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getId()).asObject());
             colNom.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getNom()));
             colCategorie.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCategorie()));
@@ -101,7 +136,19 @@ public class ClientInventaire extends Application {
             colDescription.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDescription()));
             colReference.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getReference()));
 
+
+            colOperation.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getOperation()));
+            colUser.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getUser()));
+            colDetails.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDetails()));
+            colTimestamp.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getTimestamp().toString()));
+
+
             table.getColumns().addAll(colNom, colCategorie, colQuantite, colPrix, colMarque, colDescription, colReference, colDateCreation, colDateModification);
+
+
+            logsTable.getColumns().addAll(colOperation, colUser, colDetails, colTimestamp);
+            logsTable.setPrefHeight(200); // Adjust as needed
+
 
 
             table.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -158,14 +205,17 @@ public class ClientInventaire extends Application {
             btnRechercher.setOnAction(e -> rechercherProduit());
             btnSupprimer.setOnAction(e -> supprimerProduit());
             btnAfficher.setOnAction(e -> afficherProduits());
-
+            Button btnViewLogs = new Button("Afficher les Logs");
             GridPane grid = new GridPane();
             grid.setVgap(10);
             grid.setHgap(10);
             grid.setAlignment(Pos.CENTER);
 
             if ("admin".equals(role)) {
-            grid.add(new Label("Nom :"), 0, 1);
+
+                btnViewLogs.setOnAction(e -> afficherLogs());
+
+                grid.add(new Label("Nom :"), 0, 1);
             grid.add(tfNom, 1, 1);
             grid.add(new Label("Catégorie :"), 0, 2);
             grid.add(tfCategorie, 1, 2);
@@ -183,7 +233,7 @@ public class ClientInventaire extends Application {
             }
             HBox hbox = new HBox(10);
             if ("admin".equals(role)) {
-            hbox.getChildren().addAll(btnRechercher, btnSupprimer, btnAfficher);
+            hbox.getChildren().addAll(btnRechercher, btnSupprimer, btnAfficher,btnViewLogs);
             hbox.setAlignment(Pos.CENTER);
             } else {
 
@@ -191,24 +241,48 @@ public class ClientInventaire extends Application {
                 hbox.setAlignment(Pos.CENTER);
 
             }
-            grid.add(btnDisconnect, 20, 0);
+            grid.add(btnDisconnect, 40, 0);
 
-            VBox vbox = new VBox(20);
+          //  VBox vbox = new VBox(30);         vbox.getChildren().addAll(welcomeLabel, roleLabel);
             vbox.setAlignment(Pos.CENTER);
             vbox.getChildren().addAll(grid, tfRecherche, table, hbox);
+            if ("admin".equals(role)) {
+                vbox.getChildren().addAll(logsTable);
+            }
 
             Scene scene = new Scene(vbox, 600, 500);
 
             scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
-
+            primaryStage.setWidth(1000);
+            primaryStage.setHeight(1000);
+            primaryStage.setResizable(true);
             primaryStage.setScene(scene);
             primaryStage.show();
+
             afficherProduits();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void afficherLogs() {
+        try {
+            List<String> logs = inventaire.afficherLogs();
+            logsTable.getItems().clear();
+
+            if (logs.isEmpty()) {
+                System.out.println("Aucun log trouvé.");
+            } else {
+                for (String log : logs) {
+                    String[] parts = parseLogString(log);
+                    logsTable.getItems().add(new Log(parts[0], parts[1], parts[2], parts[3]));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showErrorMessage("Erreur", "Une erreur est survenue lors de l'affichage des logs.");
+        }
+    }
 
     private void ajouterProduit() {
         try {
@@ -228,11 +302,11 @@ public class ClientInventaire extends Application {
             double prix = Double.parseDouble(tfPrix.getText().trim());
 
             if (Idtoupdate > 0) {
-                inventaire.modifierProduit(Idtoupdate, nom, categorie, quantite, prix, marque, description, reference);
+                inventaire.modifierProduit(Idtoupdate, nom, categorie, quantite, prix, marque, description, reference,loggedInUser.getUsername());
                 System.out.println("Produit modifié avec succès !");
 
             } else {
-                inventaire.ajouterProduit(nom, categorie, quantite, prix, marque, description, reference);
+                inventaire.ajouterProduit(nom, categorie, quantite, prix, marque, description, reference,loggedInUser.getUsername());
                 System.out.println("Produit ajouté avec succès !");
             }
             afficherProduits();
@@ -251,7 +325,7 @@ public class ClientInventaire extends Application {
             Product selectedProduct = table.getSelectionModel().getSelectedItem();
             if (selectedProduct != null) {
                 int id = selectedProduct.getId();
-                inventaire.supprimerProduit(id);
+                inventaire.supprimerProduit(id,loggedInUser.getUsername());
                 System.out.println("Produit supprimé avec succès !");
                 table.getItems().remove(selectedProduct);
             } else {
@@ -353,6 +427,18 @@ public class ClientInventaire extends Application {
         alert.setContentText(message);
         alert.showAndWait();
     }
+    private String[] parseLogString(String log) {
+        // Example log: "Operation: ADD_PRODUCT, User: admin, Details: Added a new product, Timestamp: 2024-12-26 12:00:00"
+        String[] fields = new String[4];
+        String[] parts = log.split(", ");
+        for (int i = 0; i < parts.length; i++) {
+            String[] keyValue = parts[i].split(": ", 2);
+            if (keyValue.length == 2) {
+                fields[i] = keyValue[1].trim();
+            }
+        }
+        return fields;
+    }
 
     private String[] parseProductString(String productString) {
         String[] fields = new String[10];
@@ -399,7 +485,35 @@ public class ClientInventaire extends Application {
         return fields;
     }
 
+    public static class Log {
+        private final String operation;
+        private final String user;
+        private final String details;
+        private final String timestamp;
 
+        public Log(String operation, String user, String details, String timestamp) {
+            this.operation = operation;
+            this.user = user;
+            this.details = details;
+            this.timestamp = timestamp;
+        }
+
+        public String getOperation() {
+            return operation;
+        }
+
+        public String getUser() {
+            return user;
+        }
+
+        public String getDetails() {
+            return details;
+        }
+
+        public String getTimestamp() {
+            return timestamp;
+        }
+    }
     public static class Product {
         private final SimpleIntegerProperty id;
         private final SimpleStringProperty nom;
