@@ -1,6 +1,9 @@
 
 # Système de Gestion d'Inventaire avec Accès Distant Via (RMI)
 
+![Image](https://img001.prntscr.com/file/img001/2AGgbDw9TwiKlzIJPIcNew.png)
+
+
 ## Description
 Le projet "Système de Gestion d'Inventaire avec Accès Distant Via (RMI)" permet de gérer un inventaire de produits avec un accès distant via RMI (Remote Method Invocation). Le système utilise Java pour la logique de l'application, JavaFX pour l'interface graphique, et MySQL pour la gestion des données. Le projet inclut également un système d'authentification simple avec deux rôles : **utilisateur** et **admin**.
 
