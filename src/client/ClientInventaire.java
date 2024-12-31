@@ -23,7 +23,7 @@ public class ClientInventaire extends Application {
     private User loggedInUser;
     private TableView<Log> logsTable;
 
-    private TableView<Product> table;
+    private TableView<Produit> table;
     private TextField tfNom, tfCategorie, tfQuantite, tfPrix, tfRecherche, tfMarque, tfDescription, tfReference;
     private Button btnAjouter, btnRechercher, btnModifier, btnSupprimer, btnAfficher;
     private int Idtoupdate = 0 ;
@@ -104,17 +104,17 @@ public class ClientInventaire extends Application {
 
             vbox.getChildren().addAll(welcomeLabel, roleLabel);
             table = new TableView<>();
-            TableColumn<Product, Integer> colId = new TableColumn<>("ID");
-            TableColumn<Product, String> colNom = new TableColumn<>("Nom");
-            TableColumn<Product, String> colCategorie = new TableColumn<>("Catégorie");
-            TableColumn<Product, Integer> colQuantite = new TableColumn<>("Quantité");
-            TableColumn<Product, Double> colPrix = new TableColumn<>("Prix");
-            TableColumn<Product, String> colMarque = new TableColumn<>("Marque");
+            TableColumn<Produit, Integer> colId = new TableColumn<>("ID");
+            TableColumn<Produit, String> colNom = new TableColumn<>("Nom");
+            TableColumn<Produit, String> colCategorie = new TableColumn<>("Catégorie");
+            TableColumn<Produit, Integer> colQuantite = new TableColumn<>("Quantité");
+            TableColumn<Produit, Double> colPrix = new TableColumn<>("Prix");
+            TableColumn<Produit, String> colMarque = new TableColumn<>("Marque");
 
-            TableColumn<Product, String> colDescription = new TableColumn<>("Description");
-            TableColumn<Product, String> colReference = new TableColumn<>("Référence");
-            TableColumn<Product, String> colDateCreation = new TableColumn<>("Date Création");
-            TableColumn<Product, String> colDateModification = new TableColumn<>("Date Modification");
+            TableColumn<Produit, String> colDescription = new TableColumn<>("Description");
+            TableColumn<Produit, String> colReference = new TableColumn<>("Référence");
+            TableColumn<Produit, String> colDateCreation = new TableColumn<>("Date Création");
+            TableColumn<Produit, String> colDateModification = new TableColumn<>("Date Modification");
 
 
             // Initialize the logs table
@@ -322,12 +322,12 @@ public class ClientInventaire extends Application {
 
     private void supprimerProduit() {
         try {
-            Product selectedProduct = table.getSelectionModel().getSelectedItem();
-            if (selectedProduct != null) {
-                int id = selectedProduct.getId();
+            Produit selectedProduit = table.getSelectionModel().getSelectedItem();
+            if (selectedProduit != null) {
+                int id = selectedProduit.getId();
                 inventaire.supprimerProduit(id,loggedInUser.getUsername());
                 System.out.println("Produit supprimé avec succès !");
-                table.getItems().remove(selectedProduct);
+                table.getItems().remove(selectedProduit);
             } else {
                 showErrorMessage("Erreur", "Veuillez sélectionner un produit à supprimer.");
             }
@@ -353,10 +353,10 @@ public class ClientInventaire extends Application {
                 System.out.println("Aucun produit trouvé.");
             } else {
                 produits.forEach(p -> {
-                    String[] fields = parseProductString(p);
+                    String[] fields = parseProduitString(p);
                     if (fields.length == 10) {
                         int id = Integer.parseInt(fields[0]);
-                        table.getItems().add(new Product(
+                        table.getItems().add(new Produit(
                                 id,
                                 fields[1], // Nom
                                 fields[2], // Catégorie
@@ -394,11 +394,11 @@ public class ClientInventaire extends Application {
                 System.out.println("Aucun produit dans l'inventaire.");
             } else {
                 produits.forEach(p -> {
-                    String[] fields = parseProductString(p);
+                    String[] fields = parseProduitString(p);
                     if (fields.length == 10) {
                         int id = Integer.parseInt(fields[0]); // ID de produit
 
-                        table.getItems().add(new Product(id, fields[1], fields[2], Integer.parseInt(fields[3]), Double.parseDouble(fields[4]), fields[5], fields[6], fields[7], fields[8], fields[9]));
+                        table.getItems().add(new Produit(id, fields[1], fields[2], Integer.parseInt(fields[3]), Double.parseDouble(fields[4]), fields[5], fields[6], fields[7], fields[8], fields[9]));
                     }
                 });
             }
@@ -428,7 +428,7 @@ public class ClientInventaire extends Application {
         alert.showAndWait();
     }
     private String[] parseLogString(String log) {
-        // Example log: "Operation: ADD_PRODUCT, User: admin, Details: Added a new product, Timestamp: 2024-12-26 12:00:00"
+        // Example log: "Operation: ADD_Produit, User: admin, Details: Added a new Produit, Timestamp: 2024-12-26 12:00:00"
         String[] fields = new String[4];
         String[] parts = log.split(", ");
         for (int i = 0; i < parts.length; i++) {
@@ -440,10 +440,10 @@ public class ClientInventaire extends Application {
         return fields;
     }
 
-    private String[] parseProductString(String productString) {
+    private String[] parseProduitString(String ProduitString) {
         String[] fields = new String[10];
 
-        String[] parts = productString.split(", ");
+        String[] parts = ProduitString.split(", ");
         for (int i = 0; i < parts.length; i++) {
             String[] keyValue = parts[i].split(": ");
             if (keyValue.length == 2) {
@@ -514,7 +514,7 @@ public class ClientInventaire extends Application {
             return timestamp;
         }
     }
-    public static class Product {
+    public static class Produit {
         private final SimpleIntegerProperty id;
         private final SimpleStringProperty nom;
         private final SimpleStringProperty categorie;
@@ -526,7 +526,7 @@ public class ClientInventaire extends Application {
         private final SimpleStringProperty description;
         private final SimpleStringProperty reference;
 
-        public Product(int id, String nom, String categorie, int quantite, double prix, String marque, String dateCreation, String dateModification, String description, String reference) {
+        public Produit(int id, String nom, String categorie, int quantite, double prix, String marque, String dateCreation, String dateModification, String description, String reference) {
             this.id = new SimpleIntegerProperty(id);
             this.nom = new SimpleStringProperty(nom);
             this.categorie = new SimpleStringProperty(categorie);
